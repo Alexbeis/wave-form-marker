@@ -2,13 +2,15 @@
     'use-strict';
     
      const App = {
+
+         options: {
+             canvasWidth: window.innerWidth, 
+             canvasHeight: 300,
+             drawLines: 300
+         },
+         
         //DOM Elements
         audioElement: document.querySelector('audio'),
-        options: {
-            canvasWidth: window.innerWidth, 
-            canvasHeight: 300,
-        },
-        
         // Properties
         canvas: null,
         audioContext: null,
@@ -60,34 +62,33 @@
             request.open('GET', 'track.wav', true);
             request.responseType = 'arraybuffer';
             request.onload = () => {
-            this.audioContext.decodeAudioData(request.response, (buffer) => {
-                this.track = buffer;
-                this._displayTrack();
-            });
+                this.audioContext.decodeAudioData(request.response, (buffer) => {
+                    this.track = buffer;
+                    this._displayTrack();
+                });
             }
             request.send();
         },
         _displayTrack() {
             console.log(this.canvas);
             
-            var drawLines = 300;
-            var leftChannel = this.track.getChannelData(0); // Float32Array describing left channel     
+            let leftChannel = this.track.getChannelData(0);  
             //var lineOpacity = canvasWidth / leftChannel.length  ;      
             this.canvas.save();
             this.canvas.fillStyle = '#080808' ;
             this.canvas.fillRect(0,0,this.options.canvasWidth,this.options.canvasHeight );
             this.canvas.strokeStyle = '#46a0ba';
             this.canvas.globalCompositeOperation = 'lighter';
-            this.canvas.translate(0,this.canvasHeight / 2);
+            this.canvas.translate(0,this.options.canvasHeight / 2);
             //context.globalAlpha = 0.6 ; // lineOpacity ;
             this.canvas.lineWidth=1;
             let totallength = leftChannel.length;
-            let eachBlock = Math.floor(totallength / drawLines);
-            let lineGap = (this.canvasWidth/drawLines);
+            let eachBlock = Math.floor(totallength / this.options.drawLines);
+            let lineGap = (this.options.canvasWidth/this.options.drawLines);
 
             this.canvas.beginPath();
 
-            for (let i=0;i<=drawLines;i++) {
+            for (let i=0;i<=this.options.drawLines;i++) {
                 let audioBuffKey = Math.floor(eachBlock * i);
                 let x = i*lineGap;
                 let y = leftChannel[audioBuffKey] * this.options.canvasHeight / 2;
@@ -100,7 +101,7 @@
         // Public Methods
         init(options) {
             console.log('Initializing App...');
-        
+            this.options = {...this.options, ...options};
             this._loadEvents();
             this._createCanvas(this.options.canvasWidth, this.options.canvasHeight);
             
@@ -114,6 +115,15 @@
         }
     }
     window.App = App || {};
-    App.init();
+
+    let options = {
+        canvasWidth: window.innerWidth, 
+        canvasHeight: 300
+    };
+    
+    /**
+     * App initialization
+     */
+    App.init(options);
     
 })();

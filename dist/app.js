@@ -2,23 +2,22 @@
     'use-strict';
     
      const App = {
+
+         options: {
+             canvasWidth: window.innerWidth, 
+             canvasHeight: 300,
+             drawLines: 300
+         },
+         
         //DOM Elements
         audioElement: document.querySelector('audio'),
-        canvasWidth: window.innerWidth, 
-        canvasHeight:300,
         // Properties
         canvas: null,
         audioContext: null,
         track:null,
 
-        //Methods
-        init() {
-            console.log('Initializing App...');
-        
-            this._loadEvents();
-            this._createCanvas(this.canvasWidth, this.canvasHeight);
-            
-        },
+        // Methods
+        // Private
         _createCanvas(w, h) {
             console.log('Creating Canvas...');
             
@@ -63,52 +62,68 @@
             request.open('GET', 'track.wav', true);
             request.responseType = 'arraybuffer';
             request.onload = () => {
-            this.audioContext.decodeAudioData(request.response, (buffer) => {
-                audioBuffer = buffer;
-                this.track = audioBuffer;
-                this._displayTrack();
-            });
+                this.audioContext.decodeAudioData(request.response, (buffer) => {
+                    this.track = buffer;
+                    this._displayTrack();
+                });
             }
             request.send();
         },
         _displayTrack() {
             console.log(this.canvas);
             
-            var drawLines = 300;
-            var leftChannel = this.track.getChannelData(0); // Float32Array describing left channel     
+            let leftChannel = this.track.getChannelData(0);  
             //var lineOpacity = canvasWidth / leftChannel.length  ;      
             this.canvas.save();
             this.canvas.fillStyle = '#080808' ;
-            this.canvas.fillRect(0,0,this.canvasWidth,this.canvasHeight );
+            this.canvas.fillRect(0,0,this.options.canvasWidth,this.options.canvasHeight );
             this.canvas.strokeStyle = '#46a0ba';
             this.canvas.globalCompositeOperation = 'lighter';
-            this.canvas.translate(0,this.canvasHeight / 2);
+            this.canvas.translate(0,this.options.canvasHeight / 2);
             //context.globalAlpha = 0.6 ; // lineOpacity ;
             this.canvas.lineWidth=1;
-            var totallength = leftChannel.length;
-            var eachBlock = Math.floor(totallength / drawLines);
-            var lineGap = (this.canvasWidth/drawLines);
-         
-           this.canvas.beginPath();
-            for(var i=0;i<=drawLines;i++){
-               var audioBuffKey = Math.floor(eachBlock * i);
-                var x = i*lineGap;
-                var y = leftChannel[audioBuffKey] * this.canvasHeight / 2;
+            let totallength = leftChannel.length;
+            let eachBlock = Math.floor(totallength / this.options.drawLines);
+            let lineGap = (this.options.canvasWidth/this.options.drawLines);
+
+            this.canvas.beginPath();
+
+            for (let i=0;i<=this.options.drawLines;i++) {
+                let audioBuffKey = Math.floor(eachBlock * i);
+                let x = i*lineGap;
+                let y = leftChannel[audioBuffKey] * this.options.canvasHeight / 2;
                 this.canvas.moveTo( x, y );
                 this.canvas.lineTo( x, (y*-1) );
             }
             this.canvas.stroke();
             this.canvas.restore();
         },
+        // Public Methods
+        init(options) {
+            console.log('Initializing App...');
+            this.options = {...this.options, ...options};
+            this._loadEvents();
+            this._createCanvas(this.options.canvasWidth, this.options.canvasHeight);
+            
+        },
         drawArea(initTime, endTime){
             // TODO: Covert time to pixels (timeToPixelConverter())
             this.canvas.beginPath();
-            this.canvas.rect(initTime, 0, (endTime - initTime), this.canvasHeight);
-            this.canvas.fillStyle = "rgba(255,0,0, .5)";
+            this.canvas.rect(initTime, 0, (endTime - initTime), this.options.canvasHeight);
+            this.canvas.fillStyle = "rgba(255,0,0, .3)";
             this.canvas.fill();
         }
     }
     window.App = App || {};
-    App.init();
+
+    let options = {
+        canvasWidth: window.innerWidth, 
+        canvasHeight: 300
+    };
+    
+    /**
+     * App initialization
+     */
+    App.init(options);
     
 })();
