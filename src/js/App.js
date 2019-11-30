@@ -34,6 +34,26 @@
             newCanvas.height = h;
             document.body.appendChild(newCanvas);
                            
+            newCanvas.addEventListener('mousemove', (evt)=> {
+                this.mousemove = true;
+                this.mouseX = evt.clientX;
+            });
+
+            newCanvas.addEventListener('mouseout', (evt)=> {
+                this.mousemove = false;
+            });
+
+            newCanvas.addEventListener('mousedown', (evt)=> {
+                if (this.audioContext){
+                    this.prevPlayedTime = evt.clientX * this.track.duration / this.options.canvasWidth;
+                    if(this.playing){
+                        this._stopTrack();
+                        this.prevPlayedTime = evt.clientX * this.track.duration / this.options.canvasWidth;
+                        this._playTrack();
+                    }
+                }
+            });
+
             this.canvas = newCanvas.getContext('2d');
         },
         _loadEvents() {
@@ -104,31 +124,41 @@
             this.playButton.innerHTML = "PLAY";
             this.playButton.addEventListener('click', ()=>{
                 if(!this.playing){
-                    this.audioContext.source = this.audioContext.createBufferSource();
-                    this.audioContext.source.buffer = this.track;
-                    this.audioContext.source.connect(this.audioContext.destination);
-                    this.audioContext.source.start(0, this.prevPlayedTime);
-                    this.startPlayTime = this.audioContext.currentTime;
-                    this.playing = true;
-                    this.playButton.innerHTML = "PAUSE";
+                    this._playTrack();
                 }
                 else{
-                    this.playing = false;
-                    this.prevPlayedTime += this.audioContext.currentTime - this.startPlayTime;
-                    this.audioContext.source.stop();
-                    this.playButton.innerHTML = "PLAY";
+                   this._pauseTrack();
                 }
             });
             this.stopButton = document.createElement("BUTTON");
             this.stopButton.innerHTML = "STOP";
             this.stopButton.addEventListener('click', ()=>{
-                    this.audioContext.source.stop();
-                    this.playing = false;
-                    this.prevPlayedTime = 0;
+                this._stopTrack();
             });
 
             document.body.appendChild(this.playButton);
             document.body.appendChild(this.stopButton);
+        },
+        _playTrack(){
+            this.audioContext.source = this.audioContext.createBufferSource();
+            this.audioContext.source.buffer = this.track;
+            this.audioContext.source.connect(this.audioContext.destination);
+            this.audioContext.source.start(0, this.prevPlayedTime);
+            this.startPlayTime = this.audioContext.currentTime;
+            this.playing = true;
+            this.playButton.innerHTML = "PAUSE";
+        },
+        _pauseTrack(){
+            this.playing = false;
+            this.prevPlayedTime += this.audioContext.currentTime - this.startPlayTime;
+            this.audioContext.source.stop();
+            this.playButton.innerHTML = "PLAY";
+        },
+        _stopTrack(){
+            this.audioContext.source.stop();
+            this.playing = false;
+            this.prevPlayedTime = 0;
+            this.playButton.innerHTML = "PLAY";
         },
         // Public Methods
         init(options) {
@@ -145,11 +175,11 @@
             this.canvas.fillStyle = "rgba(255,0,0, .3)";
             this.canvas.fill();
         },
-        drawLine(currentTime){
+        drawLine(currentTime, color){
             this.canvas.beginPath();
             this.canvas.moveTo(currentTime, 0);
             this.canvas.lineTo(currentTime, this.options.canvasHeight);
-            this.canvas.strokeStyle = "yellow";
+            this.canvas.strokeStyle = color;
             this.canvas.stroke();
         },
         draw(){
@@ -158,10 +188,13 @@
             window.App.drawArea(150, 170);
             if(window.App.playing){
                 window.App.playTime = window.App.prevPlayedTime + window.App.audioContext.currentTime - window.App.startPlayTime;
-                window.App.drawLine(parseInt(window.App.playTime * window.App.options.canvasWidth / window.App.track.duration));
+                window.App.drawLine(parseInt(window.App.playTime * window.App.options.canvasWidth / window.App.track.duration), "yellow");
             }
             else{
-                window.App.drawLine(parseInt(window.App.prevPlayedTime * window.App.options.canvasWidth / window.App.track.duration));
+                window.App.drawLine(parseInt(window.App.prevPlayedTime * window.App.options.canvasWidth / window.App.track.duration), "yellow");
+            }
+            if(window.App.mousemove){
+                window.App.drawLine(parseInt(window.App.mouseX), "orange");
             }
             window.requestAnimationFrame(window.App.draw);
         },
