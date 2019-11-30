@@ -3,11 +3,11 @@
     
      const App = {
 
-         options: {
-             canvasWidth: window.innerWidth, 
-             canvasHeight: 300,
-             drawLines: 300
-         },
+        options: {
+            canvasWidth: window.innerWidth, 
+            canvasHeight: 300,
+            drawLines: 300
+        },
          
         //DOM Elements
         audioElement: document.querySelector('audio'),
@@ -87,7 +87,7 @@
             request.onload = () => {
                 this.audioContext.decodeAudioData(request.response, (buffer) => {
                     this.track = buffer;
-                    window.requestAnimationFrame(window.App.draw);
+                    requestAnimationFrame(this.draw.bind(this));
                 });
             }
             request.send();
@@ -109,7 +109,7 @@
 
             this.canvas.beginPath();
 
-            for (let i=0;i<=this.options.drawLines;i++) {
+            for (let i=0; i<=this.options.drawLines; i++) {
                 let audioBuffKey = Math.floor(eachBlock * i);
                 let x = i*lineGap;
                 let y = leftChannel[audioBuffKey] * this.options.canvasHeight / 2;
@@ -121,43 +121,70 @@
         },
         _createControls(){
             this.playButton = document.createElement("BUTTON");
+            this.playButton.className = "btn btn-success";
             this.playButton.innerHTML = "PLAY";
             this.playButton.addEventListener('click', ()=>{
-                if(!this.playing){
+                if (!this.playing){
                     this._playTrack();
-                }
-                else{
+                } else{
                    this._pauseTrack();
                 }
             });
+
             this.stopButton = document.createElement("BUTTON");
+            this.stopButton.className = 'btn btn-danger';
             this.stopButton.innerHTML = "STOP";
             this.stopButton.addEventListener('click', ()=>{
                 this._stopTrack();
             });
 
-            document.body.appendChild(this.playButton);
-            document.body.appendChild(this.stopButton);
+            let container = document.createElement('div');
+            container.className = 'container text-center pt-4';
+
+            container.appendChild(this.playButton);
+            container.appendChild(this.stopButton);
+
+            document.body.appendChild(container);
         },
         _playTrack(){
+            console.log('playing track...');
+            if (this.playing) return;
+
             this.audioContext.source = this.audioContext.createBufferSource();
             this.audioContext.source.buffer = this.track;
             this.audioContext.source.connect(this.audioContext.destination);
             this.audioContext.source.start(0, this.prevPlayedTime);
+            this.audioContext.source.addEventListener('ended', () => {
+                console.log('Audio ended...');
+                console.log(this.track.duration);
+                console.log(this.audioContext.currentTime);
+                //TODO: How to detect when the audio finished by its own..
+            });
             this.startPlayTime = this.audioContext.currentTime;
             this.playing = true;
+
+
+            this.playButton.classList.remove('btn-success');
+            this.playButton.classList.add('btn-warning');
             this.playButton.innerHTML = "PAUSE";
         },
         _pauseTrack(){
+            console.log('Pausing track');
+            
             this.playing = false;
             this.prevPlayedTime += this.audioContext.currentTime - this.startPlayTime;
+            this.playButton.classList.remove('btn-warning');
+            this.playButton.classList.add('btn-success');
             this.audioContext.source.stop();
             this.playButton.innerHTML = "PLAY";
         },
         _stopTrack(){
+            console.log('Stopping track');
             this.audioContext.source.stop();
             this.playing = false;
             this.prevPlayedTime = 0;
+            this.playButton.classList.remove('btn-warning');
+            this.playButton.classList.add('btn-success');
             this.playButton.innerHTML = "PLAY";
         },
         // Public Methods
@@ -168,11 +195,11 @@
             this._createCanvas(this.options.canvasWidth, this.options.canvasHeight);
             this._createControls();
         },
-        drawArea(initTime, endTime){
+        drawArea(initTime, endTime, color){
             // TODO: Covert time to pixels (timeToPixelConverter())
             this.canvas.beginPath();
             this.canvas.rect(initTime, 0, (endTime - initTime), this.options.canvasHeight);
-            this.canvas.fillStyle = "rgba(255,0,0, .3)";
+            this.canvas.fillStyle = color;
             this.canvas.fill();
         },
         drawLine(currentTime, color){
@@ -183,20 +210,24 @@
             this.canvas.stroke();
         },
         draw(){
-            window.App.canvas.clearRect(0, 0, window.App.options.canvasWidth, window.App.options.canvasHeight);
-            window.App._displayTrack();
-            window.App.drawArea(150, 170);
-            if(window.App.playing){
-                window.App.playTime = window.App.prevPlayedTime + window.App.audioContext.currentTime - window.App.startPlayTime;
-                window.App.drawLine(parseInt(window.App.playTime * window.App.options.canvasWidth / window.App.track.duration), "yellow");
+            this.canvas.clearRect(0, 0, this.options.canvasWidth, this.options.canvasHeight);
+            this._displayTrack();
+
+            // Paint Areas
+            for (let drawpoints of this.options.drawPoints) {
+                this.drawArea(drawpoints.a, drawpoints.b, drawpoints.color);
             }
-            else{
-                window.App.drawLine(parseInt(window.App.prevPlayedTime * window.App.options.canvasWidth / window.App.track.duration), "yellow");
+
+            if (this.playing){
+                this.playTime = this.prevPlayedTime + this.audioContext.currentTime - this.startPlayTime;
+                this.drawLine(parseInt(this.playTime * this.options.canvasWidth / this.track.duration), "yellow");
+            } else{
+                this.drawLine(parseInt(this.prevPlayedTime * this.options.canvasWidth / this.track.duration), "yellow");
             }
-            if(window.App.mousemove){
-                window.App.drawLine(parseInt(window.App.mouseX), "orange");
+            if (this.mousemove){
+                this.drawLine(parseInt(window.App.mouseX), "orange");
             }
-            window.requestAnimationFrame(window.App.draw);
+            requestAnimationFrame(this.draw.bind(this));
         },
 
     }
@@ -204,7 +235,13 @@
 
     let options = {
         canvasWidth: window.innerWidth, 
-        canvasHeight: 300
+        canvasHeight: 300,
+        drawLines: 2000,
+        drawPoints: [
+            {a:150, b:300, color:"rgba(255,0,0, .3)"},
+            {a:500, b:623, color:"rgba(0,255,0, .3)"},
+            {a:700, b:768, color:"rgba(0,0,255, .3)"}
+            ]
     };
     
     /**
