@@ -15,6 +15,10 @@
         canvas: null,
         audioContext: null,
         track:null,
+        playTime: 0,
+        prevPlayedTime:0,
+        startPlayTime:0,
+        playing: false,
 
         // Methods
         // Private
@@ -41,7 +45,6 @@
             if (this.audioContext !== null) {
                 return;
             }
-
             let contextClass = (window.AudioContext ||
                 window.webkitAudioContext ||
                 window.mozAudioContext ||
@@ -64,14 +67,12 @@
             request.onload = () => {
                 this.audioContext.decodeAudioData(request.response, (buffer) => {
                     this.track = buffer;
-                    this._displayTrack();
+                    window.requestAnimationFrame(window.App.draw);
                 });
             }
             request.send();
         },
         _displayTrack() {
-            console.log(this.canvas);
-            
             let leftChannel = this.track.getChannelData(0);  
             //var lineOpacity = canvasWidth / leftChannel.length  ;      
             this.canvas.save();
@@ -98,13 +99,44 @@
             this.canvas.stroke();
             this.canvas.restore();
         },
+        _createControls(){
+            this.playButton = document.createElement("BUTTON");
+            this.playButton.innerHTML = "PLAY";
+            this.playButton.addEventListener('click', ()=>{
+                if(!this.playing){
+                    this.audioContext.source = this.audioContext.createBufferSource();
+                    this.audioContext.source.buffer = this.track;
+                    this.audioContext.source.connect(this.audioContext.destination);
+                    this.audioContext.source.start(0, this.prevPlayedTime);
+                    this.startPlayTime = this.audioContext.currentTime;
+                    this.playing = true;
+                    this.playButton.innerHTML = "PAUSE";
+                }
+                else{
+                    this.playing = false;
+                    this.prevPlayedTime += this.audioContext.currentTime - this.startPlayTime;
+                    this.audioContext.source.stop();
+                    this.playButton.innerHTML = "PLAY";
+                }
+            });
+            this.stopButton = document.createElement("BUTTON");
+            this.stopButton.innerHTML = "STOP";
+            this.stopButton.addEventListener('click', ()=>{
+                    this.audioContext.source.stop();
+                    this.playing = false;
+                    this.prevPlayedTime = 0;
+            });
+
+            document.body.appendChild(this.playButton);
+            document.body.appendChild(this.stopButton);
+        },
         // Public Methods
         init(options) {
             console.log('Initializing App...');
             this.options = {...this.options, ...options};
             this._loadEvents();
             this._createCanvas(this.options.canvasWidth, this.options.canvasHeight);
-            
+            this._createControls();
         },
         drawArea(initTime, endTime){
             // TODO: Covert time to pixels (timeToPixelConverter())
@@ -112,7 +144,28 @@
             this.canvas.rect(initTime, 0, (endTime - initTime), this.options.canvasHeight);
             this.canvas.fillStyle = "rgba(255,0,0, .3)";
             this.canvas.fill();
-        }
+        },
+        drawLine(currentTime){
+            this.canvas.beginPath();
+            this.canvas.moveTo(currentTime, 0);
+            this.canvas.lineTo(currentTime, this.options.canvasHeight);
+            this.canvas.strokeStyle = "yellow";
+            this.canvas.stroke();
+        },
+        draw(){
+            window.App.canvas.clearRect(0, 0, window.App.options.canvasWidth, window.App.options.canvasHeight);
+            window.App._displayTrack();
+            window.App.drawArea(150, 170);
+            if(window.App.playing){
+                window.App.playTime = window.App.prevPlayedTime + window.App.audioContext.currentTime - window.App.startPlayTime;
+                window.App.drawLine(parseInt(window.App.playTime * window.App.options.canvasWidth / window.App.track.duration));
+            }
+            else{
+                window.App.drawLine(parseInt(window.App.prevPlayedTime * window.App.options.canvasWidth / window.App.track.duration));
+            }
+            window.requestAnimationFrame(window.App.draw);
+        },
+
     }
     window.App = App || {};
 
