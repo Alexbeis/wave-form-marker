@@ -42,7 +42,7 @@
                     y = evt.clientY;
 
                 this.tooltipElement.style.display = 'block';
-                this.tooltipElement.innerHTML = (evt.clientX * this.track.duration / this.options.canvasWidth).toFixed(3);
+                this.tooltipElement.innerHTML = (evt.clientX * this.track.duration / this.options.canvasWidth).toFixed(3) + ' s';
                 this.tooltipElement.style.top = (y + 10) + 'px';
                 this.tooltipElement.style.left = (x + 10) + 'px';
                 
@@ -203,7 +203,6 @@
             console.log('Initializing App...');
             this.options = {...this.options, ...options};
             this._loadEvents();
-            //this._createCanvas(this.options.canvasWidth, this.options.canvasHeight);
             this._createControls();
         },
         drawArea(initTime, endTime, color){

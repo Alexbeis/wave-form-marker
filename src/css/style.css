@@ -9,12 +9,7 @@
     background-color: greenyellow;
     overflow:hidden;
 }
-.tooltip-timed {
-    display:block;
-    position:fixed;
-    background-color: red;
-    overflow:hidden;
-}
+
 .principal{
     cursor: pointer;
 }
