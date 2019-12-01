@@ -37,6 +37,16 @@
             newCanvas.addEventListener('mousemove', (evt)=> {
                 this.mousemove = true;
                 this.mouseX = evt.clientX;
+                const tooltipSpan = document.getElementById('tooltip-span');
+
+                let x = evt.clientX,
+                    y = evt.clientY;
+
+                tooltipSpan.style.display = 'block';
+                tooltipSpan.innerHTML = (evt.clientX * this.track.duration / this.options.canvasWidth).toFixed(3);
+                tooltipSpan.style.top = (y + 10) + 'px';
+                tooltipSpan.style.left = (x + 10) + 'px';
+                
             });
 
             newCanvas.addEventListener('mouseout', (evt)=> {
