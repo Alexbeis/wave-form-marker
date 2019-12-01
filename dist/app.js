@@ -11,6 +11,7 @@
          
         //DOM Elements
         audioElement: document.querySelector('audio'),
+        tooltipElement: document.getElementById('tooltip-span'),
         // Properties
         canvas: null,
         audioContext: null,
@@ -32,25 +33,24 @@
             let newCanvas = document.createElement('canvas');
             newCanvas.width  = w;     
             newCanvas.height = h;
-            document.body.appendChild(newCanvas);
-                           
+                          
             newCanvas.addEventListener('mousemove', (evt)=> {
                 this.mousemove = true;
                 this.mouseX = evt.clientX;
-                const tooltipSpan = document.getElementById('tooltip-span');
-
+            
                 let x = evt.clientX,
                     y = evt.clientY;
 
-                tooltipSpan.style.display = 'block';
-                tooltipSpan.innerHTML = (evt.clientX * this.track.duration / this.options.canvasWidth).toFixed(3);
-                tooltipSpan.style.top = (y + 10) + 'px';
-                tooltipSpan.style.left = (x + 10) + 'px';
+                this.tooltipElement.style.display = 'block';
+                this.tooltipElement.innerHTML = (evt.clientX * this.track.duration / this.options.canvasWidth).toFixed(3);
+                this.tooltipElement.style.top = (y + 10) + 'px';
+                this.tooltipElement.style.left = (x + 10) + 'px';
                 
             });
 
             newCanvas.addEventListener('mouseout', (evt)=> {
                 this.mousemove = false;
+                this.tooltipElement.style.display = 'none';
             });
 
             newCanvas.addEventListener('mousedown', (evt)=> {
@@ -63,7 +63,7 @@
                     }
                 }
             });
-
+            document.querySelector('.principal').replaceWith(newCanvas);
             this.canvas = newCanvas.getContext('2d');
         },
         _loadEvents() {
@@ -83,6 +83,7 @@
             if (contextClass) {
                 this.audioContext = new contextClass();
                 this._createTrack();
+                this._createCanvas(this.options.canvasWidth, this.options.canvasHeight);
             } else {
                 alert('Your browser does not support web audio api');
             }
@@ -202,7 +203,7 @@
             console.log('Initializing App...');
             this.options = {...this.options, ...options};
             this._loadEvents();
-            this._createCanvas(this.options.canvasWidth, this.options.canvasHeight);
+            //this._createCanvas(this.options.canvasWidth, this.options.canvasHeight);
             this._createControls();
         },
         drawArea(initTime, endTime, color){
