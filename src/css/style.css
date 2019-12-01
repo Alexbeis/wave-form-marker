@@ -1,0 +1,15 @@
+.tooltip-time {
+    text-decoration:none;
+    position:relative;
+}
+.tooltip-time span {
+    display:none;
+    padding: 3px;
+    position:fixed;
+    background-color: greenyellow;
+    overflow:hidden;
+}
+
+.principal{
+    cursor: pointer;
+}
