@@ -4,7 +4,7 @@ class Player {
         
         this.options = null;
         this.mainEl = document.querySelector(selector);
-        this.tooltipElement= document.getElementById('tooltip-span');
+        this.tooltip= new Tooltip();
         this.audioContext = null;
         this.track = new Track();
         this.controls = new Controls();
@@ -18,6 +18,8 @@ class Player {
         console.log('Starting Player...');
         this.options = {...this.options, ...options};
         this.controls.render();
+        this.tooltip.render();
+        this.tooltipElement = document.getElementById('tooltip-span');
         this.waveformMarker = new WaveformMarker(this.mainEl, this.options.waveform);
         this.loadEvents();
     }
@@ -75,6 +77,13 @@ class Player {
                 }
             }
         });
+
+        /**
+         * Double click event to add markers
+         */
+        document.addEventListener('dblclick', (e) => {
+            console.log('Double click detected!'); 
+        });
     }
     _playTrack(){
         console.log('playing track...');
@@ -106,7 +115,7 @@ class Player {
         this.controls.getPlayElement().classList.remove('btn-warning');
         this.controls.getPlayElement().classList.add('btn-success');
         this.audioContext.source.stop();
-        this.playButton.innerHTML = "PLAY";
+        this.controls.getPlayElement().innerHTML = "PLAY";
     }
     _stopTrack(){
         console.log('Stopping track');
@@ -117,9 +126,7 @@ class Player {
         this.controls.getPlayElement().classList.add('btn-success');
         this.controls.getPlayElement().innerHTML = "PLAY";
     }
-    createAudioContext() { 
-        //this.waveformMarker.start(this.options.waveform); 
-           
+    createAudioContext() {            
         //If it exists, do not create it
         if (this.audioContext !== null) {
             return;
@@ -140,7 +147,7 @@ class Player {
     }
 
     loadAudioTrack() {
-        return this.track.load(this.audioContext, this.waveformMarker, this); 
+        return this.track.load(this); 
     }
 
     drawArea(initTime, endTime, color){

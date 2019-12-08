@@ -12,7 +12,7 @@ class Track {
         }   
     }
 
-    load(audioContext, waveformMarker, player) {
+    load(player) {
         if (this.buffer) {
             return;
         }
@@ -20,10 +20,8 @@ class Track {
         request.open('GET', 'track.wav', true);
         request.responseType = 'arraybuffer';
         request.onload = () => {
-            audioContext.decodeAudioData(request.response, (decodedData) => {
+            player.audioContext.decodeAudioData(request.response, (decodedData) => {
                     this.addBuffer(decodedData);
-                    // TODO: try to not pass waveformMarker object
-                    //waveformMarker.render(this.buffer);
                     requestAnimationFrame(player.draw.bind(player));
                 });
         }

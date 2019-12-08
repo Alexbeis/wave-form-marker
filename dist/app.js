@@ -61,6 +61,22 @@ class Controls {
 
 
 }
+class Tooltip {
+    constructor() {
+        this.tooltipElement = this._createTooltipElement();
+    }
+    _createTooltipElement() {
+        const tooltip = document.createElement('span');
+        tooltip.className = 'tooltip-time';
+        tooltip.innerHTML = `<span id="tooltip-span"></span>`;
+
+        return tooltip;
+    }
+    
+    render() {
+        document.body.appendChild(this.tooltipElement);
+    }
+}
 class Track {
     constructor(){
        this.buffer = null; 
@@ -75,7 +91,7 @@ class Track {
         }   
     }
 
-    load(audioContext, waveformMarker, player) {
+    load(player) {
         if (this.buffer) {
             return;
         }
@@ -83,10 +99,8 @@ class Track {
         request.open('GET', 'track.wav', true);
         request.responseType = 'arraybuffer';
         request.onload = () => {
-            audioContext.decodeAudioData(request.response, (decodedData) => {
+            player.audioContext.decodeAudioData(request.response, (decodedData) => {
                     this.addBuffer(decodedData);
-                    // TODO: try to not pass waveformMarker object
-                    //waveformMarker.render(this.buffer);
                     requestAnimationFrame(player.draw.bind(player));
                 });
         }
@@ -121,29 +135,32 @@ class WaveformMarker {
     }
     
     render(trackBuffer) {
+        let canvasWidth = this.options.canvasWidth;
+        let canvasHeight = this.options.canvasHeight;
+        let drawLines = this.options.drawLines;
+        let leftChannel = trackBuffer.getChannelData(0);  
+        let canvasContext = this.canvas.getCanvasContext(); 
 
         this.wrapperElement
         .replaceWith(
             this.canvas.render(
-                this.options.canvasWidth, 
-                this.options.canvasHeight
+                canvasWidth, 
+                canvasHeight
             )
         );
 
-        let leftChannel = trackBuffer.getChannelData(0);  
-        //var lineOpacity = canvasWidth / leftChannel.length  ; 
-        let canvasContext = this.canvas.getCanvasContext();     
+        
         canvasContext.save();
         canvasContext.fillStyle = '#080808' ;
-        canvasContext.fillRect(0,0,this.options.canvasWidth,this.options.canvasHeight );
+        canvasContext.fillRect(0, 0, canvasWidth, canvasHeight);
         canvasContext.strokeStyle = '#46a0ba';
         canvasContext.globalCompositeOperation = 'lighter';
-        canvasContext.translate(0,this.options.canvasHeight / 2);
-        //context.globalAlpha = 0.6 ; // lineOpacity ;
+        canvasContext.translate(0, canvasHeight / 2);
+        canvasContext.globalAlpha = 0.9;
         canvasContext.lineWidth=1;
         let totallength = leftChannel.length;
-        let eachBlock = Math.floor(totallength / this.options.drawLines);
-        let lineGap = (this.options.canvasWidth/this.options.drawLines);
+        let eachBlock = Math.floor(totallength / drawLines);
+        let lineGap = (canvasWidth / drawLines);
 
         canvasContext.beginPath();
 
@@ -167,7 +184,7 @@ class Player {
         
         this.options = null;
         this.mainEl = document.querySelector(selector);
-        this.tooltipElement= document.getElementById('tooltip-span');
+        this.tooltip= new Tooltip();
         this.audioContext = null;
         this.track = new Track();
         this.controls = new Controls();
@@ -181,6 +198,8 @@ class Player {
         console.log('Starting Player...');
         this.options = {...this.options, ...options};
         this.controls.render();
+        this.tooltip.render();
+        this.tooltipElement = document.getElementById('tooltip-span');
         this.waveformMarker = new WaveformMarker(this.mainEl, this.options.waveform);
         this.loadEvents();
     }
@@ -238,6 +257,13 @@ class Player {
                 }
             }
         });
+
+        /**
+         * Double click event to add markers
+         */
+        document.addEventListener('dblclick', (e) => {
+            console.log('Double click detected!'); 
+        });
     }
     _playTrack(){
         console.log('playing track...');
@@ -269,7 +295,7 @@ class Player {
         this.controls.getPlayElement().classList.remove('btn-warning');
         this.controls.getPlayElement().classList.add('btn-success');
         this.audioContext.source.stop();
-        this.playButton.innerHTML = "PLAY";
+        this.controls.getPlayElement().innerHTML = "PLAY";
     }
     _stopTrack(){
         console.log('Stopping track');
@@ -280,9 +306,7 @@ class Player {
         this.controls.getPlayElement().classList.add('btn-success');
         this.controls.getPlayElement().innerHTML = "PLAY";
     }
-    createAudioContext() { 
-        //this.waveformMarker.start(this.options.waveform); 
-           
+    createAudioContext() {            
         //If it exists, do not create it
         if (this.audioContext !== null) {
             return;
@@ -303,7 +327,7 @@ class Player {
     }
 
     loadAudioTrack() {
-        return this.track.load(this.audioContext, this.waveformMarker, this); 
+        return this.track.load(this); 
     }
 
     drawArea(initTime, endTime, color){
@@ -353,7 +377,7 @@ class Player {
     let options = {
             waveform: {
                 canvasWidth: window.innerWidth, 
-                canvasHeight: 300,
+                canvasHeight: 400,
                 drawLines: 2000,
                 drawPoints: 
                     [

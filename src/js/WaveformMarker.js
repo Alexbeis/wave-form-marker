@@ -21,29 +21,32 @@ class WaveformMarker {
     }
     
     render(trackBuffer) {
+        let canvasWidth = this.options.canvasWidth;
+        let canvasHeight = this.options.canvasHeight;
+        let drawLines = this.options.drawLines;
+        let leftChannel = trackBuffer.getChannelData(0);  
+        let canvasContext = this.canvas.getCanvasContext(); 
 
         this.wrapperElement
         .replaceWith(
             this.canvas.render(
-                this.options.canvasWidth, 
-                this.options.canvasHeight
+                canvasWidth, 
+                canvasHeight
             )
         );
 
-        let leftChannel = trackBuffer.getChannelData(0);  
-        //var lineOpacity = canvasWidth / leftChannel.length  ; 
-        let canvasContext = this.canvas.getCanvasContext();     
+        
         canvasContext.save();
         canvasContext.fillStyle = '#080808' ;
-        canvasContext.fillRect(0,0,this.options.canvasWidth,this.options.canvasHeight );
+        canvasContext.fillRect(0, 0, canvasWidth, canvasHeight);
         canvasContext.strokeStyle = '#46a0ba';
         canvasContext.globalCompositeOperation = 'lighter';
-        canvasContext.translate(0,this.options.canvasHeight / 2);
-        //context.globalAlpha = 0.6 ; // lineOpacity ;
+        canvasContext.translate(0, canvasHeight / 2);
+        canvasContext.globalAlpha = 0.9;
         canvasContext.lineWidth=1;
         let totallength = leftChannel.length;
-        let eachBlock = Math.floor(totallength / this.options.drawLines);
-        let lineGap = (this.options.canvasWidth/this.options.drawLines);
+        let eachBlock = Math.floor(totallength / drawLines);
+        let lineGap = (canvasWidth / drawLines);
 
         canvasContext.beginPath();
 
