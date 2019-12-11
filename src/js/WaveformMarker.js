@@ -13,6 +13,7 @@ class WaveformMarker {
         // Merge options
         this.options = {...this.options, ...options};     
         this.canvas = new Canvas();
+        this.markers = [];  
         
     }
 

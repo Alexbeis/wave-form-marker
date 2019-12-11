@@ -11,7 +11,7 @@ class Player {
         this.playTime= 0;
         this.prevPlayedTime=0;
         this.startPlayTime=0;
-        this.playing= false;       
+        this.playing= false;     
     }
     
     start(options) {
@@ -68,21 +68,41 @@ class Player {
         });
 
         this.waveformMarker.getCanvas().getCanvasElement().addEventListener('mousedown', (evt)=> {
-            if (this.audioContext){
+            /*if (this.audioContext){
                 this.prevPlayedTime = evt.clientX * this.track.buffer.duration / this.options.waveform.canvasWidth;
                 if(this.playing){
                     this._stopTrack();
                     this.prevPlayedTime = evt.clientX * this.track.buffer.duration  / this.options.waveform.canvasWidth;
                     this._playTrack();
                 }
-            }
+            }*/
+            if (!this.audioContext) return;
+            this.prevPlayedTime = evt.clientX * this.track.buffer.duration / this.options.waveform.canvasWidth;
+            if(!this.playing) return;
+            this._stopTrack();
+            this.prevPlayedTime = evt.clientX * this.track.buffer.duration  / this.options.waveform.canvasWidth;
+            this._playTrack();
         });
 
         /**
          * Double click event to add markers
          */
-        document.addEventListener('dblclick', (e) => {
+        document.addEventListener('dblclick', (evt) => {
             console.log('Double click detected!'); 
+            let rect = this.waveformMarker.getCanvas().getCanvasElement().getBoundingClientRect();            
+            let mouseXPos = (evt.x - rect.left);
+            let mouseYPos = (evt.y - rect.top);
+
+            var marker = new Marker();
+            marker.XPos = mouseXPos;
+            marker.YPos = mouseYPos - marker.Height;
+            let time = (evt.clientX * this.track.buffer.duration / this.options.waveform.canvasWidth).toFixed(3) + ' s';
+            var markerText = `${time}`;
+            marker.text = markerText;
+            
+            this.waveformMarker.markers.push(marker);
+            console.log(this.waveformMarker.markers);
+            
         });
     }
     _playTrack(){
@@ -150,6 +170,19 @@ class Player {
         return this.track.load(this); 
     }
 
+    printMarker(tempMarker) {
+        let canvasContext = this.waveformMarker.getCanvas().getCanvasContext();
+        let textMeasurements = canvasContext.measureText(tempMarker.text);
+        canvasContext.fillStyle = "#666";
+        canvasContext.globalAlpha = 0.7;
+        canvasContext.fillRect(tempMarker.XPos - (textMeasurements.width / 2), tempMarker.YPos - 15, textMeasurements.width + 15, 20);
+        canvasContext.globalAlpha = 1;
+
+        // Draw position above
+        canvasContext.fillStyle = "#000";
+        canvasContext.fillText(tempMarker.text, tempMarker.XPos - 15, tempMarker.YPos);
+    }
+
     drawArea(initTime, endTime, color){
                 
         // TODO: Covert time to pixels (timeToPixelConverter())
@@ -160,7 +193,7 @@ class Player {
         canvasContext.fill();
     }
     drawLine(currentTime, color){
-        let canvasContext = this.waveformMarker.getCanvas().getCanvasContext()
+        let canvasContext = this.waveformMarker.getCanvas().getCanvasContext();
         canvasContext.beginPath();
         canvasContext.moveTo(currentTime, 0);
         canvasContext.lineTo(currentTime, this.options.waveform.canvasHeight);
@@ -175,6 +208,14 @@ class Player {
         // Paint Areas
         for (let drawpoints of this.options.waveform.drawPoints) {
             this.drawArea(drawpoints.a, drawpoints.b, drawpoints.color);
+        }
+
+        // Draw marker
+        for (let i = 0; i < this.waveformMarker.markers.length; i++) {
+            let tempMarker = this.waveformMarker.markers[i];
+
+            this.drawLine(parseInt(tempMarker.XPos), "red");
+            this.printMarker(tempMarker);
         }
 
         if (this.playing){
