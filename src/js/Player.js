@@ -68,17 +68,10 @@ class Player {
         });
 
         this.waveformMarker.getCanvas().getCanvasElement().addEventListener('mousedown', (evt)=> {
-            /*if (this.audioContext){
-                this.prevPlayedTime = evt.clientX * this.track.buffer.duration / this.options.waveform.canvasWidth;
-                if(this.playing){
-                    this._stopTrack();
-                    this.prevPlayedTime = evt.clientX * this.track.buffer.duration  / this.options.waveform.canvasWidth;
-                    this._playTrack();
-                }
-            }*/
             if (!this.audioContext) return;
             this.prevPlayedTime = evt.clientX * this.track.buffer.duration / this.options.waveform.canvasWidth;
-            if(!this.playing) return;
+            if (!this.playing) return;
+
             this._stopTrack();
             this.prevPlayedTime = evt.clientX * this.track.buffer.duration  / this.options.waveform.canvasWidth;
             this._playTrack();
