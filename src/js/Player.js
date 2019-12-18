@@ -35,21 +35,9 @@ class Player {
         /**
          * Control Events
          */
-        this.controls.getPlayElement().addEventListener('click', ()=>{
-            if (!this.playing){
-                this._playTrack();
-            } else{
-               this._pauseTrack();
-            }
-        });
-
-        this.controls.getStopElement().addEventListener('click', ()=>{
-            this._stopTrack();
-        });
-
-        this.controls.getLoopElement().addEventListener('click', () => {
-            this._handleLoop();
-        });
+        this.controls.getPlayElement().addEventListener('click', this._handlePlay.bind(this));
+        this.controls.getStopElement().addEventListener('click', this._stopTrack.bind(this));
+        this.controls.getLoopElement().addEventListener('click', this._handleLoop.bind(this));
 
         /**
          * Waveform Events
@@ -108,6 +96,13 @@ class Player {
             
         });
     }
+    _handlePlay() {
+        if (!this.playing){
+            this._playTrack();
+        } else{
+           this._pauseTrack();
+        }
+    }
     _handleLoop() {
         let element = this.controls.getLoopElement();
         let value = element.dataset.looping;
@@ -148,7 +143,6 @@ class Player {
         });
         this.startPlayTime = this.audioContext.currentTime;
         this.playing = true;
-
 
         this.controls.getPlayElement().classList.remove('btn-success');
         this.controls.getPlayElement().classList.add('btn-warning');
@@ -211,6 +205,20 @@ class Player {
         canvasContext.fillText(tempMarker.text, tempMarker.XPos - 15, tempMarker.YPos);
     }
 
+    drawMarkers() {
+        for (let i = 0; i < this.waveformMarker.markers.length; i++) {
+            let tempMarker = this.waveformMarker.markers[i];
+            this.drawLine(parseInt(tempMarker.XPos), "red");
+            this.printMarker(tempMarker);
+        }
+    }
+
+    drawAreas() {
+        for (let drawpoints of this.options.waveform.drawPoints) {
+            this.drawArea(drawpoints.a, drawpoints.b, drawpoints.color);
+        }
+    }
+
     drawArea(initTime, endTime, color){
                 
         // TODO: Covert time to pixels (timeToPixelConverter())
@@ -234,18 +242,11 @@ class Player {
         this.waveformMarker.render(this.track.buffer);
 
         // Paint Areas
-        for (let drawpoints of this.options.waveform.drawPoints) {
-            this.drawArea(drawpoints.a, drawpoints.b, drawpoints.color);
-        }
+        this.drawAreas();
 
         // Draw marker
-        for (let i = 0; i < this.waveformMarker.markers.length; i++) {
-            let tempMarker = this.waveformMarker.markers[i];
-
-            this.drawLine(parseInt(tempMarker.XPos), "red");
-            this.printMarker(tempMarker);
-        }
-
+        this.drawMarkers();
+        
         if (this.playing){
             this.playTime = this.prevPlayedTime + this.audioContext.currentTime - this.startPlayTime;
             if (this.looping && this.playTime >= (this.waveformMarker.markers[1].time)) {
@@ -262,5 +263,4 @@ class Player {
         }
         requestAnimationFrame(this.draw.bind(this));
     }
-    
 }
