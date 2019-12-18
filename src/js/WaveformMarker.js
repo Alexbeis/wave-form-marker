@@ -21,7 +21,7 @@ class WaveformMarker {
         return this.canvas;
     }
     
-    render(trackBuffer) {
+    render (trackBuffer) {
         let canvasWidth = this.options.canvasWidth;
         let canvasHeight = this.options.canvasHeight;
         let drawLines = this.options.drawLines;
@@ -29,14 +29,13 @@ class WaveformMarker {
         let canvasContext = this.canvas.getCanvasContext(); 
 
         this.wrapperElement
-        .replaceWith(
-            this.canvas.render(
-                canvasWidth, 
-                canvasHeight
-            )
-        );
+            .replaceWith(
+                this.canvas.render(
+                    canvasWidth, 
+                    canvasHeight
+                )
+            );
 
-        
         canvasContext.save();
         canvasContext.fillStyle = '#080808' ;
         canvasContext.fillRect(0, 0, canvasWidth, canvasHeight);

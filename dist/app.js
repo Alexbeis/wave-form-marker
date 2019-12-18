@@ -25,9 +25,11 @@ class Controls {
     constructor() {
         this.playButton = null;
         this.stopButton = null;
+        this.loopButton = null;
 
         this._createPlayControl();
         this._createStopControl();
+        this._createLoopControl();
     }
     _createPlayControl() {
         this.playButton = document.createElement("BUTTON");
@@ -39,6 +41,13 @@ class Controls {
         this.stopButton.className = 'btn btn-danger';
         this.stopButton.innerHTML = "STOP";
     }
+    _createLoopControl() {
+       this.loopButton = document.createElement("BUTTON");
+       this.loopButton.className = 'btn btn-primary';
+       this.loopButton.dataset.looping = 'false';
+       this.loopButton.innerHTML = "LOOP ON";
+
+    }
 
     getPlayElement() {
         return this.playButton;
@@ -48,12 +57,17 @@ class Controls {
         return this.stopButton;
     }
 
+    getLoopElement() {
+        return this.loopButton;
+    }
+
     render() {
         let container = document.createElement('div');
         container.className = 'container text-center pt-4';
 
         container.appendChild(this.playButton);
         container.appendChild(this.stopButton);
+        container.appendChild(this.loopButton);
 
         document.body.appendChild(container);
      }
@@ -67,6 +81,7 @@ class Marker {
         this.Height = 20;
         this.XPos = 0;
         this.YPos = 0;
+        this.time = null;
         this.text = null;
     }
 }
@@ -145,7 +160,7 @@ class WaveformMarker {
         return this.canvas;
     }
     
-    render(trackBuffer) {
+    render (trackBuffer) {
         let canvasWidth = this.options.canvasWidth;
         let canvasHeight = this.options.canvasHeight;
         let drawLines = this.options.drawLines;
@@ -153,14 +168,13 @@ class WaveformMarker {
         let canvasContext = this.canvas.getCanvasContext(); 
 
         this.wrapperElement
-        .replaceWith(
-            this.canvas.render(
-                canvasWidth, 
-                canvasHeight
-            )
-        );
+            .replaceWith(
+                this.canvas.render(
+                    canvasWidth, 
+                    canvasHeight
+                )
+            );
 
-        
         canvasContext.save();
         canvasContext.fillStyle = '#080808' ;
         canvasContext.fillRect(0, 0, canvasWidth, canvasHeight);
@@ -203,6 +217,7 @@ class Player {
         this.prevPlayedTime=0;
         this.startPlayTime=0;
         this.playing= false;     
+        this.looping = false;
     }
     
     start(options) {
@@ -237,6 +252,10 @@ class Player {
             this._stopTrack();
         });
 
+        this.controls.getLoopElement().addEventListener('click', () => {
+            this._handleLoop();
+        });
+
         /**
          * Waveform Events
          */
@@ -259,17 +278,10 @@ class Player {
         });
 
         this.waveformMarker.getCanvas().getCanvasElement().addEventListener('mousedown', (evt)=> {
-            /*if (this.audioContext){
-                this.prevPlayedTime = evt.clientX * this.track.buffer.duration / this.options.waveform.canvasWidth;
-                if(this.playing){
-                    this._stopTrack();
-                    this.prevPlayedTime = evt.clientX * this.track.buffer.duration  / this.options.waveform.canvasWidth;
-                    this._playTrack();
-                }
-            }*/
             if (!this.audioContext) return;
             this.prevPlayedTime = evt.clientX * this.track.buffer.duration / this.options.waveform.canvasWidth;
-            if(!this.playing) return;
+            if (!this.playing) return;
+
             this._stopTrack();
             this.prevPlayedTime = evt.clientX * this.track.buffer.duration  / this.options.waveform.canvasWidth;
             this._playTrack();
@@ -287,14 +299,44 @@ class Player {
             var marker = new Marker();
             marker.XPos = mouseXPos;
             marker.YPos = mouseYPos - marker.Height;
+            marker.time = (evt.clientX * this.track.buffer.duration / this.options.waveform.canvasWidth);
             let time = (evt.clientX * this.track.buffer.duration / this.options.waveform.canvasWidth).toFixed(3) + ' s';
-            var markerText = `${time}`;
+            let markerText = `${time}`;
             marker.text = markerText;
-            
-            this.waveformMarker.markers.push(marker);
+            if (this.waveformMarker.markers.length < 2) {
+                this.waveformMarker.markers.push(marker);
+            }
+
+            // order Markers
+            this.waveformMarker.markers.sort((a,b) => (a.XPos > b.XPos) ? 1 : ((b.XPos > a.XPos) ? -1 : 0)); 
             console.log(this.waveformMarker.markers);
             
         });
+    }
+    _handleLoop() {
+        let element = this.controls.getLoopElement();
+        let value = element.dataset.looping;
+        
+        if (!this.audioContext.source && this.waveformMarker.markers.length != 2) {
+            console.log('missing init and end markers');
+
+            return;    
+        }
+        
+        if (value == 'true') {
+            this.audioContext.source.loop = false;
+            this.looping = false;
+            this.waveformMarker.markers = [];
+            element.dataset.looping = 'false';
+            element.innerHTML = "LOOP ON";
+        } else {
+            this.audioContext.source.loop = true;
+            this.looping = true;
+            this.audioContext.source.loopStart = this.waveformMarker.markers[0].time;
+            this.audioContext.source.loopEnd = this.waveformMarker.markers[1].time;    
+            element.dataset.looping = "true";
+            element.innerHTML = "LOOP OFF";
+        }    
     }
     _playTrack(){
         console.log('playing track...');
@@ -307,7 +349,6 @@ class Player {
         this.audioContext.source.addEventListener('ended', () => {
             console.log('Audio ended...');
             console.log(this.track.buffer.duration);
-            console.log(this.audioContext.currentTime);
             //TODO: How to detect when the audio finished by its own..
         });
         this.startPlayTime = this.audioContext.currentTime;
@@ -330,6 +371,7 @@ class Player {
     }
     _stopTrack(){
         console.log('Stopping track');
+        if (!this.audioContext) return;
         this.audioContext.source.stop();
         this.playing = false;
         this.prevPlayedTime = 0;
@@ -411,8 +453,23 @@ class Player {
 
         if (this.playing){
             this.playTime = this.prevPlayedTime + this.audioContext.currentTime - this.startPlayTime;
-            this.drawLine(parseInt(this.playTime * this.options.waveform.canvasWidth / this.track.buffer.duration), "yellow");
-        } else{
+            console.log('playtime: '+ this.playTime);
+            
+            if (this.looping && this.playTime > (this.waveformMarker.markers[1].time)) {
+                console.log('Looping!');
+                console.log('playtime: '+ this.playTime);
+                console.log(this.playTime > (this.waveformMarker.markers[1].time));
+                
+                console.log('vuelvo');
+                //this.startPlayTime = this.audioContext.currentTime - this.waveformMarker.markers[0].time;
+                this.prevPlayedTime += this.audioContext.currentTime - (this.waveformMarker.markers[1].time-this.waveformMarker.markers[0].time);
+                console.log('prevPlayed: '+ this.prevPlayedTime);
+                this.drawLine(parseInt(this.waveformMarker.markers[0].time * this.options.waveform.canvasWidth / this.track.buffer.duration), "yellow");
+            
+            } else {
+                this.drawLine(parseInt(this.playTime * this.options.waveform.canvasWidth / this.track.buffer.duration), "yellow");
+            }
+        } else {
             this.drawLine(parseInt(this.prevPlayedTime * this.options.waveform.canvasWidth / this.track.buffer.duration), "yellow");
         }
         if (this.mousemove){
