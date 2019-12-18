@@ -128,7 +128,7 @@ class Player {
             this.audioContext.source.loop = true;
             this.looping = true;
             this.audioContext.source.loopStart = this.waveformMarker.markers[0].time;
-            this.audioContext.source.loopEnd = this.waveformMarker.markers[1].time;    
+            this.audioContext.source.loopEnd = this.waveformMarker.markers[1].time;
             element.dataset.looping = "true";
             element.innerHTML = "LOOP OFF";
         }    
@@ -248,19 +248,9 @@ class Player {
 
         if (this.playing){
             this.playTime = this.prevPlayedTime + this.audioContext.currentTime - this.startPlayTime;
-            console.log('playtime: '+ this.playTime);
-            
-            if (this.looping && this.playTime > (this.waveformMarker.markers[1].time)) {
-                console.log('Looping!');
-                console.log('playtime: '+ this.playTime);
-                console.log(this.playTime > (this.waveformMarker.markers[1].time));
-                
-                console.log('vuelvo');
-                //this.startPlayTime = this.audioContext.currentTime - this.waveformMarker.markers[0].time;
-                this.prevPlayedTime += this.audioContext.currentTime - (this.waveformMarker.markers[1].time-this.waveformMarker.markers[0].time);
-                console.log('prevPlayed: '+ this.prevPlayedTime);
+            if (this.looping && this.playTime >= (this.waveformMarker.markers[1].time)) {
+                this.prevPlayedTime += -(this.waveformMarker.markers[1].time-this.waveformMarker.markers[0].time);
                 this.drawLine(parseInt(this.waveformMarker.markers[0].time * this.options.waveform.canvasWidth / this.track.buffer.duration), "yellow");
-            
             } else {
                 this.drawLine(parseInt(this.playTime * this.options.waveform.canvasWidth / this.track.buffer.duration), "yellow");
             }
