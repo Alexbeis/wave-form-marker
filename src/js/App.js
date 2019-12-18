@@ -257,6 +257,6 @@
     /**
      * App initialization
      */
-    App.init(options);
+    //App.init(options);
     
 })();

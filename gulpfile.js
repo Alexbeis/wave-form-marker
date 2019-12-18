@@ -12,14 +12,21 @@ let replace = require('gulp-replace');
 // File paths
 const files = { 
   cssPath: 'src/css/*.css',
-  jsPath: 'src/js/*.js'
+  jsPath: 'src/js/**/*.js',
+  //jsPathUI: 'src/js/Ui/*.js'
 }
 
 // JS task: concatenates and uglifies JS files to app.js
 
 function jsTask(){
   return src([
-    files.jsPath
+      'src/js/Ui/*.js',
+      'src/js/Track.js',
+      'src/js/WaveformMarker.js',
+      'src/js/Player.js',
+      'src/js/index.js'
+
+
       ])
       .pipe(concat('app.js'))
       //.pipe(uglify())
@@ -54,7 +61,7 @@ function cacheBustTask(){
 // Watch task: watch SCSS and JS files for changes
 // If any change, run scss and js tasks simultaneously
 function watchTask(){
-    watch([files.cssPath, files.jsPath], 
+    watch([files.cssPath,files.jsPath], 
         series(
             parallel(cssTask, jsTask),
             cacheBustTask
