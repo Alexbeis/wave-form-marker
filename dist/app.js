@@ -120,17 +120,26 @@ class Track {
         if (this.buffer) {
             return;
         }
-        let request = new XMLHttpRequest();
-        request.open('GET', 'track.wav', true);
-        request.responseType = 'arraybuffer';
-        request.onload = () => {
-            player.audioContext.decodeAudioData(request.response, (decodedData) => {
-                    this.addBuffer(decodedData);
-                    requestAnimationFrame(player.draw.bind(player));
-                });
-        }
-        request.send();
+
+        this.loadFile(player, 'track.wav').then((audioBuffer) => {
+           this.addBuffer(audioBuffer);
+           requestAnimationFrame(player.draw.bind(player));
+        });
     }
+
+    async getFile(player, filepath) {
+        const response = await fetch(filepath);
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await  player.audioContext.decodeAudioData(arrayBuffer);
+
+        return audioBuffer;
+      }
+    
+    async loadFile(player, filePath) {
+        const track = await this.getFile(player, filePath);
+
+        return track;
+      }
     render() {
 
     }
@@ -236,6 +245,15 @@ class Player {
          * Audio Context creation Event.
          */
         document.addEventListener('click', this.createAudioContext.bind(this));
+
+        /**
+         * Enable space bar click as play/pause
+         */
+        document.body.onkeyup = (e) => {
+            if(e.keyCode == 32){
+               this._handlePlay();
+            }
+        }
         
         /**
          * Control Events
@@ -387,6 +405,8 @@ class Player {
             this.audioContext = new contextClass();
             console.log(this.audioContext);
             this.loadAudioTrack();
+            console.log(this.track.buffer);
+            
             
         } else {
             alert('Your browser does not support web audio api');

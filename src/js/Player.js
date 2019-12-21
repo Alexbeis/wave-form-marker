@@ -31,6 +31,15 @@ class Player {
          * Audio Context creation Event.
          */
         document.addEventListener('click', this.createAudioContext.bind(this));
+
+        /**
+         * Enable space bar click as play/pause
+         */
+        document.body.onkeyup = (e) => {
+            if(e.keyCode == 32){
+               this._handlePlay();
+            }
+        }
         
         /**
          * Control Events
@@ -182,6 +191,8 @@ class Player {
             this.audioContext = new contextClass();
             console.log(this.audioContext);
             this.loadAudioTrack();
+            console.log(this.track.buffer);
+            
             
         } else {
             alert('Your browser does not support web audio api');
