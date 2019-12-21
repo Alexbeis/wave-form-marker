@@ -82,7 +82,7 @@ class Player {
         /**
          * Double click event to add markers
          */
-        document.addEventListener('dblclick', (evt) => {
+        this.waveformMarker.getCanvas().getCanvasElement().addEventListener('dblclick', (evt) => {
             console.log('Double click detected!'); 
             let rect = this.waveformMarker.getCanvas().getCanvasElement().getBoundingClientRect();            
             let mouseXPos = (evt.x - rect.left);
@@ -127,14 +127,14 @@ class Player {
             this.looping = false;
             this.waveformMarker.markers = [];
             element.dataset.looping = 'false';
-            element.innerHTML = "LOOP ON";
+            element.innerHTML = `<span><i class="fa fa-recycle"></i></span>`;
         } else {
             this.audioContext.source.loop = true;
             this.looping = true;
             this.audioContext.source.loopStart = this.waveformMarker.markers[0].time;
             this.audioContext.source.loopEnd = this.waveformMarker.markers[1].time;
             element.dataset.looping = "true";
-            element.innerHTML = "LOOP OFF";
+            element.innerHTML = `<span><i class="fa fa-recycle"></i>&nbsp;off</span>`;
         }    
     }
     _playTrack(){
@@ -155,7 +155,7 @@ class Player {
 
         this.controls.getPlayElement().classList.remove('btn-success');
         this.controls.getPlayElement().classList.add('btn-warning');
-        this.controls.getPlayElement().innerHTML = "PAUSE";
+        this.controls.getPlayElement().innerHTML = `<span><i class="fas fa-pause"></i></span>`;
     }
     _pauseTrack(){
         console.log('Pausing track');
@@ -165,7 +165,7 @@ class Player {
         this.controls.getPlayElement().classList.remove('btn-warning');
         this.controls.getPlayElement().classList.add('btn-success');
         this.audioContext.source.stop();
-        this.controls.getPlayElement().innerHTML = "PLAY";
+        this.controls.getPlayElement().innerHTML = `<span><i class="fas fa-play"></i></span>`;
     }
     _stopTrack(){
         console.log('Stopping track');
@@ -175,7 +175,7 @@ class Player {
         this.prevPlayedTime = 0;
         this.controls.getPlayElement().classList.remove('btn-warning');
         this.controls.getPlayElement().classList.add('btn-success');
-        this.controls.getPlayElement().innerHTML = "PLAY";
+        this.controls.getPlayElement().innerHTML = `<span><i class="fas fa-play"></i></span>`;
     }
     createAudioContext() {            
         //If it exists, do not create it
@@ -247,17 +247,8 @@ class Player {
         canvasContext.strokeStyle = color;
         canvasContext.stroke();
     }
-    draw(){
-        let canvasContext = this.waveformMarker.getCanvas().getCanvasContext()
-        canvasContext.clearRect(0, 0, this.options.waveform.canvasWidth, this.options.waveform.canvasHeight);
-        this.waveformMarker.render(this.track.buffer);
 
-        // Paint Areas
-        this.drawAreas();
-
-        // Draw marker
-        this.drawMarkers();
-        
+    handleDrawLine() {
         if (this.playing){
             this.playTime = this.prevPlayedTime + this.audioContext.currentTime - this.startPlayTime;
             if (this.looping && this.playTime >= (this.waveformMarker.markers[1].time)) {
@@ -272,6 +263,22 @@ class Player {
         if (this.mousemove){
             this.drawLine(parseInt(this.mouseX), "orange");
         }
+    }
+
+    draw(){
+        let canvasContext = this.waveformMarker.getCanvas().getCanvasContext()
+        canvasContext.clearRect(0, 0, this.options.waveform.canvasWidth, this.options.waveform.canvasHeight);
+        this.waveformMarker.render(this.track.buffer);
+
+        // Paint Areas
+        this.drawAreas();
+
+        // Draw marker
+        this.drawMarkers();
+        
+        // Draw lines
+        this.handleDrawLine();
+
         requestAnimationFrame(this.draw.bind(this));
     }
 }

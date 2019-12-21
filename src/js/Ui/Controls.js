@@ -10,19 +10,19 @@ class Controls {
     }
     _createPlayControl() {
         this.playButton = document.createElement("BUTTON");
-        this.playButton.className = "btn btn-success";
-        this.playButton.innerHTML = "PLAY";
+        this.playButton.className = "btn-lg btn-success";
+        this.playButton.innerHTML = `<span><i class="fa fa-play"></i></span>`;
     }
     _createStopControl() {
         this.stopButton = document.createElement("BUTTON");
-        this.stopButton.className = 'btn btn-danger';
-        this.stopButton.innerHTML = "STOP";
+        this.stopButton.className = 'btn-lg btn-danger';
+        this.stopButton.innerHTML = `<span><i class="fa fa-stop"></i></span>`;
     }
     _createLoopControl() {
        this.loopButton = document.createElement("BUTTON");
-       this.loopButton.className = 'btn btn-primary';
+       this.loopButton.className = 'btn-lg btn-default';
        this.loopButton.dataset.looping = 'false';
-       this.loopButton.innerHTML = "LOOP ON";
+       this.loopButton.innerHTML = `<span><i class="fa fa-recycle"></i></span>`;
 
     }
 
