@@ -116,7 +116,7 @@ class Player {
         let element = this.controls.getLoopElement();
         let value = element.dataset.looping;
         
-        if (!this.audioContext.source && this.waveformMarker.markers.length != 2) {
+        if (!this.audioContext.source || this.waveformMarker.markers.length != 2) {
             console.log('missing init and end markers');
 
             return;    
