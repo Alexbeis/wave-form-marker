@@ -8,13 +8,17 @@ class Player {
         this.audioContext = null;
         this.track = new Track();
         this.controls = new Controls();
-        this.playTime= 0;
-        this.prevPlayedTime=0;
-        this.startPlayTime=0;
+        this.playTime = 0;
+        this.prevPlayedTime =  0;
+        this.startPlayTime = 0;
         this.playing= false;     
         this.looping = false;
+        this.bars = null;
     }
-    
+    /**
+     * Entry point to start everything.
+     * @param {*} options 
+     */
     start(options) {
         console.log('Starting Player...');
         this.options = {...this.options, ...options};
@@ -25,6 +29,9 @@ class Player {
         this.loadEvents();
     }
 
+    /**
+     * Load events for all interactions
+     */
     loadEvents() {
 
         /**
@@ -88,23 +95,22 @@ class Player {
             let mouseXPos = (evt.x - rect.left);
             let mouseYPos = (evt.y - rect.top);
 
-            var marker = new Marker();
+            let marker = new Marker();
             marker.XPos = mouseXPos;
             marker.YPos = mouseYPos - marker.Height;
             marker.time = (evt.clientX * this.track.buffer.duration / this.options.waveform.canvasWidth);
             let time = (evt.clientX * this.track.buffer.duration / this.options.waveform.canvasWidth).toFixed(3) + ' s';
             let markerText = `${time}`;
             marker.text = markerText;
+
             if (this.waveformMarker.markers.length < 2) {
                 this.waveformMarker.markers.push(marker);
             }
 
-            // order Markers
             this.waveformMarker.markers.sort((a,b) => (a.XPos > b.XPos) ? 1 : ((b.XPos > a.XPos) ? -1 : 0)); 
-            console.log(this.waveformMarker.markers);
-            
         });
     }
+    
     _handlePlay() {
         if (!this.playing){
             this._playTrack();
@@ -143,7 +149,12 @@ class Player {
 
         this.audioContext.source = this.audioContext.createBufferSource();
         this.audioContext.source.buffer = this.track.buffer;
-        this.audioContext.source.connect(this.audioContext.destination);
+ 
+        this.audioContext.source.connect(this.analyser_.get());
+        this.analyser_.get().connect(this.audioContext.destination);
+        this.canvas = this.analyser_.getCanvas();
+
+        this.analyser_.start();
         this.audioContext.source.start(0, parseFloat(this.prevPlayedTime));
         this.audioContext.source.addEventListener('ended', () => {
             console.log('Audio ended...');
@@ -156,10 +167,23 @@ class Player {
         this.controls.getPlayElement().classList.remove('btn-success');
         this.controls.getPlayElement().classList.add('btn-warning');
         this.controls.getPlayElement().innerHTML = `<span><i class="fas fa-pause"></i></span>`;
+
+        this.updateAnalyser();
     }
+
+    /**
+     * Show the Analyser spectrum for current track.
+     */
+    updateAnalyser() {
+        requestAnimationFrame(this.updateAnalyser.bind(this));
+        this.analyser_.draw();
+    }
+
+    /**
+     * 
+     */
     _pauseTrack(){
         console.log('Pausing track');
-        
         this.playing = false;
         this.prevPlayedTime += this.audioContext.currentTime - this.startPlayTime;
         this.controls.getPlayElement().classList.remove('btn-warning');
@@ -167,6 +191,9 @@ class Player {
         this.audioContext.source.stop();
         this.controls.getPlayElement().innerHTML = `<span><i class="fas fa-play"></i></span>`;
     }
+    /**
+     * 
+     */
     _stopTrack(){
         console.log('Stopping track');
         if (!this.audioContext) return;
@@ -177,6 +204,10 @@ class Player {
         this.controls.getPlayElement().classList.add('btn-success');
         this.controls.getPlayElement().innerHTML = `<span><i class="fas fa-play"></i></span>`;
     }
+
+    /**
+     * 
+     */
     createAudioContext() {            
         //If it exists, do not create it
         if (this.audioContext !== null) {
@@ -191,18 +222,24 @@ class Player {
             this.audioContext = new contextClass();
             console.log(this.audioContext);
             this.loadAudioTrack();
-            console.log(this.track.buffer);
-            
-            
+            //this.createAnalyserElement();
+            this.analyser_= new Analyser(this.audioContext.createAnalyser());
+            this.analyser_.render(document.querySelector('.modal'), 470, 300);
+            console.log(this.track.buffer);   
         } else {
             alert('Your browser does not support web audio api');
         }
     }
-
+    /**
+     * 
+     */
     loadAudioTrack() {
         return this.track.load(this); 
     }
-
+    /**
+     * Print line marker given a Marker Object
+     * @param {*} tempMarker 
+     */
     printMarker(tempMarker) {
         let canvasContext = this.waveformMarker.getCanvas().getCanvasContext();
         let textMeasurements = canvasContext.measureText(tempMarker.text);
@@ -215,7 +252,9 @@ class Player {
         canvasContext.fillStyle = "#000";
         canvasContext.fillText(tempMarker.text, tempMarker.XPos - 15, tempMarker.YPos);
     }
-
+    /**
+     * 
+     */
     drawMarkers() {
         for (let i = 0; i < this.waveformMarker.markers.length; i++) {
             let tempMarker = this.waveformMarker.markers[i];
@@ -224,12 +263,20 @@ class Player {
         }
     }
 
+    /**
+     * 
+     */
     drawAreas() {
         for (let drawpoints of this.options.waveform.drawPoints) {
             this.drawArea(drawpoints.a, drawpoints.b, drawpoints.color);
         }
     }
-
+    /**
+     * 
+     * @param {*} initTime 
+     * @param {*} endTime 
+     * @param {*} color 
+     */
     drawArea(initTime, endTime, color){
                 
         // TODO: Covert time to pixels (timeToPixelConverter())
@@ -239,6 +286,11 @@ class Player {
         canvasContext.fillStyle = color;
         canvasContext.fill();
     }
+    /**
+     * 
+     * @param {*} currentTime 
+     * @param {*} color 
+     */
     drawLine(currentTime, color){
         let canvasContext = this.waveformMarker.getCanvas().getCanvasContext();
         canvasContext.beginPath();
@@ -248,6 +300,9 @@ class Player {
         canvasContext.stroke();
     }
 
+    /**
+     * 
+     */
     handleDrawLine() {
         if (this.playing){
             this.playTime = this.prevPlayedTime + this.audioContext.currentTime - this.startPlayTime;
@@ -265,6 +320,9 @@ class Player {
         }
     }
 
+    /**
+     * Print areas, markers if both exists and time cursor
+     */
     draw(){
         let canvasContext = this.waveformMarker.getCanvas().getCanvasContext()
         canvasContext.clearRect(0, 0, this.options.waveform.canvasWidth, this.options.waveform.canvasHeight);

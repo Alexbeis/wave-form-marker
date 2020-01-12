@@ -20,9 +20,12 @@ const files = {
 
 function jsTask(){
   return src([
+      'node_modules/jquery/dist/jquery.min.js',
       'node_modules/@fortawesome/fontawesome-free/js/all.js',
+      'node_modules/bootstrap/dist/js/bootstrap.min.js',
       'src/js/Utils/*',
       'src/js/Ui/*.js',
+      'src/js/Analyser.js',
       'src/js/Track.js',
       'src/js/WaveformMarker.js',
       'src/js/Player.js',
