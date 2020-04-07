@@ -5,7 +5,7 @@
     let options = {
             waveform: {
                 canvasWidth: window.innerWidth, 
-                canvasHeight: 400,
+                canvasHeight: 200,
                 drawLines: 2000,
                 drawPoints: 
                     [
