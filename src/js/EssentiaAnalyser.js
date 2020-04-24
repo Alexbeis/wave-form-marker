@@ -1,9 +1,13 @@
 class EssentiaAnalyser {
-    constructor(essentia){
+    constructor(audioContext, track, essentia){
+        this.audioContext = audioContext;
+    	this.track = track;
         this.essentia = essentia;
         this.track = null;
         this.playing = false;
-        
+        // this.bufferSize = 8192;
+        // this.scriptNode = audioContext.createScriptProcessor(this.bufferSize, 1, 1);
+
         // prints version of the essentia wasm backend
 	    console.log(this.essentia.version)
 	    // prints all the available algorithms in essentia.js 
@@ -13,31 +17,32 @@ class EssentiaAnalyser {
         // this.freqData = new Uint8Array(this.analyser.frequencyBinCount);
         // this.analyser.getByteFrequencyData(this.freqData);
         // this.bins = this.analyser.frequencyBinCount;
+        // this.init();
     }
 
-    init(track){
-    	this.track = track;
-    	this.setRMS();
+    init(){
+        // this.scriptNode.onaudioprocess = this.start;
     }
 
-    computeEssentiaAlgos(){
-
-    }
+    // setEssentiaAlgos(){
+    // }
 
 	start(){
-		this.playing = true;
-		while(this.playing){
-			console.log(this.essRMS);
-		}
+        // onprocess callback (here we can use essentia.js algos)
+	    // console.log(this.essentia.version)
+	    // console.log(this.track)
+
+        // this.essRMS = this.essentia.RMS(this.typedFloat32Array2Vec(this.track.buffer.getChannelData(0)));
+    	// console.log(this.essRMS);
+
 	}
 
 	stop(){
 		this.playing = false;
 	}
 
-	setRMS(){
-        this.essRMS = this.essentia.RMS(this.typedFloat32Array2Vec(this.track.buffer.getChannelData(0)));
-	}
+	// setRMS(){
+	// }
 
 
 	// UTILS essentia

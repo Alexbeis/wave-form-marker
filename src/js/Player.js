@@ -154,8 +154,17 @@ class Player {
         this.audioContext.source.connect(this.analyser_.get());
         this.analyser_.get().connect(this.audioContext.destination);
         this.canvas = this.analyser_.getCanvas();
-
         this.analyser_.start();
+
+        this.bufferSize = 8192;
+        var scriptNode = this.audioContext.createScriptProcessor(this.bufferSize, 1, 1);
+        this.audioContext.source.connect(scriptNode);
+        scriptNode.connect(this.audioContext.destination);
+        scriptNode.onaudioprocess = (event) => {
+            console.log(event);
+            console.log(this.essentia);
+        };
+
         this.audioContext.source.start(0, parseFloat(this.prevPlayedTime));
         this.audioContext.source.addEventListener('ended', () => {
             console.log('Audio ended...');
@@ -171,7 +180,7 @@ class Player {
 
         this.updateAnalyser();
 
-        this.essentiaAnalyser.start();
+        // this.essentiaAnalyser.start();
     }
 
     /**
@@ -195,7 +204,7 @@ class Player {
         this.audioContext.source.stop();
         this.controls.getPlayElement().innerHTML = `<span><i class="fas fa-play"></i></span>`;
 
-        this.essentiaAnalyser.stop();
+        // this.essentiaAnalyser.stop();
 
     }
 
@@ -212,7 +221,7 @@ class Player {
         this.controls.getPlayElement().classList.add('btn-success');
         this.controls.getPlayElement().innerHTML = `<span><i class="fas fa-play"></i></span>`;
 
-        this.essentiaAnalyser.stop();
+        // this.essentiaAnalyser.stop();
     }
 
     /**
@@ -250,10 +259,17 @@ class Player {
     loadEssentia(){
         EssentiaModule().then( (EssentiaWasmModule)=> {
             this.essentia = new Essentia(EssentiaWasmModule);
-            this.essentiaAnalyser = new EssentiaAnalyser(this.essentia);
-            this.essentiaAnalyser.init(this.track);
+            this.essentiaAnalyser = new EssentiaAnalyser(this.audioContext, this.track, this.essentia);
+            // this.essentiaAnalyser.init(this.track);
         });
     }
+
+    // startEssentiaAnalisis(event, this.essentia){
+    //     console.log(event);
+    //     console.log(this);
+    //     // let essRMS = this.essentia.RMS(this.essentiaAnalyser.typedFloat32Array2Vec(this.track.buffer.getChannelData(0)));
+    //     // console.log(essRMS);
+    // }
 
     /**
      * 
