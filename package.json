@@ -7,8 +7,10 @@
   "license": "MIT",
   "dependencies": {
     "autoprefixer": "^9.7.2",
+    "benchmark": "^2.1.4",
     "bootstrap": "^4.3.1",
     "cssnano": "^4.1.10",
+    "essentia.js": "^0.0.9-dev",
     "gulp": "^4.0.2",
     "gulp-clean-css": "^4.2.0",
     "gulp-concat": "^2.6.1",
@@ -17,8 +19,7 @@
     "gulp-sourcemaps": "^2.6.5",
     "gulp-uglify": "^3.0.2",
     "jquery": "^3.4.1",
-    "underscore": "^1.9.1",
-    "essentia.js": "^0.0.9-dev"
+    "underscore": "^1.9.1"
   },
   "devDependencies": {
     "@fortawesome/fontawesome-free": "^5.12.0"
