@@ -17,7 +17,8 @@
     "gulp-sourcemaps": "^2.6.5",
     "gulp-uglify": "^3.0.2",
     "jquery": "^3.4.1",
-    "underscore": "^1.9.1"
+    "underscore": "^1.9.1",
+    "essentia.js": "^0.0.9-dev"
   },
   "devDependencies": {
     "@fortawesome/fontawesome-free": "^5.12.0"

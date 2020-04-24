@@ -14,6 +14,7 @@ class Player {
         this.playing= false;     
         this.looping = false;
         this.bars = null;
+        this.essentia = null;
     }
     /**
      * Entry point to start everything.
@@ -169,6 +170,8 @@ class Player {
         this.controls.getPlayElement().innerHTML = `<span><i class="fas fa-pause"></i></span>`;
 
         this.updateAnalyser();
+
+        this.essentiaAnalyser.start();
     }
 
     /**
@@ -178,6 +181,7 @@ class Player {
         requestAnimationFrame(this.updateAnalyser.bind(this));
         this.analyser_.draw();
     }
+
 
     /**
      * 
@@ -190,7 +194,11 @@ class Player {
         this.controls.getPlayElement().classList.add('btn-success');
         this.audioContext.source.stop();
         this.controls.getPlayElement().innerHTML = `<span><i class="fas fa-play"></i></span>`;
+
+        this.essentiaAnalyser.stop();
+
     }
+
     /**
      * 
      */
@@ -203,12 +211,14 @@ class Player {
         this.controls.getPlayElement().classList.remove('btn-warning');
         this.controls.getPlayElement().classList.add('btn-success');
         this.controls.getPlayElement().innerHTML = `<span><i class="fas fa-play"></i></span>`;
+
+        this.essentiaAnalyser.stop();
     }
 
     /**
      * 
      */
-    createAudioContext() {            
+    createAudioContext() {
         //If it exists, do not create it
         if (this.audioContext !== null) {
             return;
@@ -222,20 +232,36 @@ class Player {
             this.audioContext = new contextClass();
             console.log(this.audioContext);
             this.loadAudioTrack();
+
             //this.createAnalyserElement();
             this.analyser_= new Analyser(this.audioContext.createAnalyser());
             this.analyser_.render(document.querySelector('.modal'), 470, 300);
-            console.log(this.track.buffer);   
+            console.log(this.track.buffer);
+
+            this.loadEssentia();
         } else {
             alert('Your browser does not support web audio api');
         }
     }
+    
+    /**
+    *
+    */
+    loadEssentia(){
+        EssentiaModule().then( (EssentiaWasmModule)=> {
+            this.essentia = new Essentia(EssentiaWasmModule);
+            this.essentiaAnalyser = new EssentiaAnalyser(this.essentia);
+            this.essentiaAnalyser.init(this.track);
+        });
+    }
+
     /**
      * 
      */
     loadAudioTrack() {
-        return this.track.load(this); 
+        this.track.load(this);
     }
+
     /**
      * Print line marker given a Marker Object
      * @param {*} tempMarker 
@@ -252,6 +278,7 @@ class Player {
         canvasContext.fillStyle = "#000";
         canvasContext.fillText(tempMarker.text, tempMarker.XPos - 15, tempMarker.YPos);
     }
+
     /**
      * 
      */
@@ -271,6 +298,7 @@ class Player {
             this.drawArea(drawpoints.a, drawpoints.b, drawpoints.color);
         }
     }
+
     /**
      * 
      * @param {*} initTime 
@@ -286,6 +314,7 @@ class Player {
         canvasContext.fillStyle = color;
         canvasContext.fill();
     }
+
     /**
      * 
      * @param {*} currentTime 

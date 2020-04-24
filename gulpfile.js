@@ -26,12 +26,11 @@ function jsTask(){
       'src/js/Utils/*',
       'src/js/Ui/*.js',
       'src/js/Analyser.js',
+      'src/js/EssentiaAnalyser.js',
       'src/js/Track.js',
       'src/js/WaveformMarker.js',
       'src/js/Player.js',
       'src/js/index.js'
-
-
       ],
       {base:'node_modules'})
       .pipe(concat('app.js'))
@@ -39,6 +38,7 @@ function jsTask(){
       .pipe(dest('dist')
   );
 }
+
 
 // Sass task: compiles the style.scss file into style.css
 function cssTask(){    

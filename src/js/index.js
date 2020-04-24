@@ -1,6 +1,6 @@
 (function(){
     'use-strict';
-    
+
     let MusicPlayer = new Player('#player');
     let options = {
             waveform: {
